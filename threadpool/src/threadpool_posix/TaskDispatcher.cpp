@@ -33,7 +33,6 @@ void threadpool::TaskDispatcher::handle(Task* task)
         m_task_list.push_back(task);
         m_mutex.unlock();
     }
-    task->run();
 }
 
 void threadpool::TaskDispatcher::run()

@@ -15,13 +15,13 @@ void threadpool::ThreadPool::create(int num)
     m_threads_num = num;
     for(int i = 0; i < num; i++)
     {
-        WorkerThread* thread = new WorkerThread();
+        Worker* thread = new WorkerThread();
         m_idle_list.insert(thread);
         thread->start();
     }
 }
 
-threadpool::Thread* threadpool::ThreadPool::get_idle_thread()
+threadpool::Worker* threadpool::ThreadPool::get_idle_thread()
 {
     AutoLock lock(&m_idle_mutex);
     while(m_idle_list.empty())
@@ -29,7 +29,7 @@ threadpool::Thread* threadpool::ThreadPool::get_idle_thread()
     return *m_idle_list.begin();
 }
 
-void threadpool::ThreadPool::move_to_idle_list(Thread* thread)
+void threadpool::ThreadPool::move_to_idle_list(Worker* thread)
 {
     m_idle_mutex.lock();
     m_idle_list.insert(thread);
@@ -37,14 +37,14 @@ void threadpool::ThreadPool::move_to_idle_list(Thread* thread)
     m_idle_mutex.unlock();
 
     m_busy_mutex.lock();
-    std::set<Thread*>::iterator it = m_busy_list.find(thread);
+    std::set<Worker*>::iterator it = m_busy_list.find(thread);
     if(it != m_busy_list.end())
         m_busy_list.erase(it);
     m_busy_cond.signal();
     m_busy_mutex.unlock();
 }
 
-void threadpool::ThreadPool::move_to_busy_list(Thread* thread)
+void threadpool::ThreadPool::move_to_busy_list(Worker* thread)
 {
     m_busy_mutex.lock();
     while(m_busy_list.size() == m_threads_num)
@@ -53,7 +53,7 @@ void threadpool::ThreadPool::move_to_busy_list(Thread* thread)
     m_busy_mutex.unlock();
 
     m_idle_mutex.lock();
-    std::set<Thread*>::iterator it = m_idle_list.find(thread);
+    std::set<Worker*>::iterator it = m_idle_list.find(thread);
     if(it != m_idle_list.end())
         m_idle_list.erase(it);
     m_idle_mutex.unlock();
@@ -74,7 +74,7 @@ int threadpool::ThreadPool::get_busy_thread_num()
 void threadpool::ThreadPool::assign_task(Task* task)
 {
     if(task==NULL) return;
-    Thread* thread = get_idle_thread();
+    Worker* thread = get_idle_thread();
 
     if(thread != NULL)
     {
@@ -82,7 +82,5 @@ void threadpool::ThreadPool::assign_task(Task* task)
         thread->set_task(task);
     }
     else
-    {
-        std::cout << "thraed is null" << std::endl;
-    }   
+        std::cout << "thread is null" << std::endl;
 }

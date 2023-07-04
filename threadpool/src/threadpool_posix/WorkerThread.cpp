@@ -1,7 +1,7 @@
 #include <threadpool_posix/WorkerThread.hpp>
 
 // TODO test remove base constructor
-threadpool::WorkerThread::WorkerThread():Thread()
+threadpool::WorkerThread::WorkerThread():Worker()
 {
 }
 
@@ -11,6 +11,13 @@ threadpool::WorkerThread::~WorkerThread()
 
 void threadpool::WorkerThread::cleanup(void* ptr){
 
+}
+
+void threadpool::WorkerThread::set_task(Task* task)
+{
+    AutoLock lock(&m_mutex);
+    m_task = task;
+    m_cond.signal();
 }
 
 void threadpool::WorkerThread::run()
@@ -33,8 +40,7 @@ void threadpool::WorkerThread::run()
             m_cond.wait(m_mutex);
         m_mutex.unlock();
 
-        int rc = 0;
-        int old_state = 0;
+        int rc = 0, old_state = 0;
         rc = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &old_state);
 
         m_task->run();
@@ -42,7 +48,6 @@ void threadpool::WorkerThread::run()
         m_task = NULL;
 
         utils::Singleton<ThreadPool>::Inst()->move_to_idle_list(this);
-
         rc = pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &old_state);
         pthread_testcancel();
     }

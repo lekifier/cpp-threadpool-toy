@@ -14,8 +14,7 @@ int main() {
         int *num = new int(i);
         threadpool::Task *task = new app::EchoTask(num);
         utils::Singleton<threadpool::TaskDispatcher>::Inst()->assign_task(task);
-        usleep(100);
     }
-    usleep(100000000);
+    usleep(100000);
     return 0;
 }

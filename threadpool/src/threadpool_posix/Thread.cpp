@@ -2,7 +2,7 @@
 #include <threadpool_posix/Thread.hpp>
 
 threadpool::Thread::Thread()
-    : m_thread_id(0), m_task(NULL)
+    : m_thread_id(0)
 {
 }
 
@@ -30,17 +30,4 @@ void* threadpool::Thread::thread_func(void* arg)
     Thread* thread = (Thread*)arg;
     thread->run();
     return NULL;
-}
-
-void threadpool::Thread::set_task(Task* task)
-{
-    AutoLock lock(&m_mutex);
-    m_task = task;
-    m_cond.signal();
-}
-
-threadpool::Task* threadpool::Thread::get_task()
-{
-    AutoLock lock(&m_mutex);
-    return m_task;
 }
